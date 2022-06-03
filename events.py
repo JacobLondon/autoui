@@ -24,7 +24,7 @@ class EventQueue:
         event: Event = None
         self.lock.acquire()
         if self.events:
-            event = self.events.pop()
+            event = self.events.pop(0)
         self.lock.release()
         return event
 
@@ -105,7 +105,7 @@ class _MyMouseProducer(EventProducer):
         return Event("mouse", message)
 
 class _MyPrintConsumer(EventConsumer):
-    def action(self, data) -> None:
+    def action(self, message, data) -> None:
         print(data)
 
 def _main(argv):

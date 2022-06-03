@@ -29,6 +29,19 @@ ALLOWABLE_HOTKEYS = ['\t', '\n', '\r', ' ', '!', '"', '#', '$', '%', '&', "'", '
 def toprint(string: str) -> str:
     return f"""print('''{string}''')"""
 
+def type_able(value: str, typecls) -> bool:
+    try:
+        typecls(value)
+        return True
+    except ValueError:
+        return False
+
+def intable(value: str) -> bool:
+    return type_able(value, int)
+
+def floatable(value: str) -> bool:
+    return type_able(value, float)
+
 # turn commands into file text
 def xform(commands: str) -> str:
     builder = ["""\
@@ -42,7 +55,7 @@ pag.FAILSAFE = True
         words = line.split()
         if not words: continue
 
-        if words[0] == '#':
+        if words[0] == '#' or words[0].startswith('#'):
             builder.append(" ".join(words))
 
         elif words[0] == 'mouse':
@@ -53,20 +66,30 @@ pag.FAILSAFE = True
                 print("Invalid mouse command on line", i+1, "Missing ','")
                 return None
 
-            x = words[1] # contains a trailing comma
+            x = words[1].replace(',', '') # contains a trailing comma
+            if not intable(x):
+                print("Invalid mouse x position on line", i+1, "Not a number")
+                return None
+
             y = words[2]
+            if not intable(y):
+                print("Invalid mouse y position on line", i+1, "Not a number")
+
             builder.append(toprint(line))
-            builder.append(f"pag.moveTo({x} {y})")
+            builder.append(f"pag.moveTo({x}, {y})")
 
         elif words[0] == 'click':
             builder.append(toprint(line))
             builder.append("pag.click()")
+
         elif words[0] == 'click2':
             builder.append(toprint(line))
             builder.append("pag.doubleClick()")
+
         elif words[0] == 'click3':
             builder.append(toprint(line))
             builder.append("pag.tripleClick()")
+
         elif words[0] == 'rclick':
             builder.append(toprint(line))
             builder.append("pag.rightClick()")
@@ -109,6 +132,10 @@ pag.FAILSAFE = True
             if len(words) < 2:
                 print("Sleep on line", i+1, "is missing a time")
                 return None
+            if not floatable(words[1]):
+                print("Invalid sleep command on line", i+1, "Not a number")
+                return None
+
             builder.append(f"time.sleep({words[1]})")
 
         else:

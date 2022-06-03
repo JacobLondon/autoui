@@ -1,4 +1,5 @@
 import pyautogui as pag
+import os
 
 from events import (
     Event,
@@ -8,6 +9,23 @@ from events import (
 )
 from menu import MenuMediator
 from transformer import xmouse, xform
+
+
+def try_write(filename: str, data: str):
+    try:
+        with open(filename, "w") as fp:
+            fp.write(data)
+    except OSError:
+        print("Failed to write", filename)
+
+def try_read(filename: str) -> str:
+    try:
+        with open(filename, "r") as fp:
+            return fp.read()
+    except OSError:
+        print("Failed to open", filename)
+    return None
+
 
 class MyMouseProducer(EventProducer):
     def action(self, data: 'MyState') -> Event:
@@ -26,38 +44,45 @@ class MyCoordsConsumer(EventConsumer):
 
 class MySaveConsumer(EventConsumer):
     def action(self, mediator: MenuMediator, data: 'MyState'):
-        filename = mediator.get_url()
-        filenamepy = filename + ".py"
+        # try to parse first to check for errors
         text = mediator.get_text()
-
         transformed = xform(text)
         if transformed is None: return
 
-        try:
-            with open(filenamepy, "w") as fp:
-                fp.write(transformed)
-        except OSError:
-            print("Failed to write %s" % filenamepy)
-
-        try:
-            with open(filename, "w") as fp:
-                fp.write(text)
-        except OSError:
-            print("Failed to write %s" % filename)
+        # then check if the file exists to write to
+        filename = mediator.get_url()
+        if not filename:
+            print("Cannot save: no file specified")
+            return
+        filenamepy = filename + ".py"
+        try_write(filenamepy, transformed)
+        try_write(filename, text)
 
 class MyOpenConsumer(EventConsumer):
     def action(self, mediator: MenuMediator, data: 'MyState'):
         filename = mediator.get_url()
-        try:
-            with open(filename, "r") as fp:
-                text = fp.read()
-        except OSError:
-            print("Failed to open %s" % filename)
-            return
+        text = try_read(filename)
+        if text is None: return
 
         mediator.delete_text()
         mediator.append_text(text)
 
+class MyPlayConsumer(EventConsumer):
+    def action(self, mediator: MenuMediator, data: 'MyState'):
+        filename = mediator.get_url()
+        if not filename:
+            print("Cannot play: no file specified")
+            return
+
+        if ';' in filename or \
+           '&&' in filename or \
+           '||' in filename or \
+           '&' in filename:
+            print("Unsafe text in the URL!")
+            return
+
+        command = f"python {filename}.py"
+        os.system(command)
 
 class MyState:
     def __init__(self):
@@ -69,10 +94,14 @@ class MyState:
             MyCoordsConsumer("coords", self),
             MySaveConsumer("save", self),
             MyOpenConsumer("open", self),
+            MyPlayConsumer("play", self),
         ]
         self.eventer = EventMediator(producers, consumers)
         self.mediator = MenuMediator("AutoGUI",
-            self.save_to_file_func, self.open_file_func, self.coord_save_func)
+            self.save_to_file_func,
+            self.open_file_func,
+            self.coord_save_func,
+            self.play_func)
 
     def start(self):
         self.eventer.start()
@@ -88,6 +117,10 @@ class MyState:
 
     def open_file_func(self, mediator):
         self.eventer.send("open", mediator)
+
+    def play_func(self, mediator):
+        self.eventer.send("save", mediator)
+        self.eventer.send("play", mediator)
 
 def _main(argv):
     m = MyState()
