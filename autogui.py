@@ -7,25 +7,37 @@ from events import (
     EventMediator,
 )
 from menu import MenuMediator
+from transformer import xmouse, xform
 
 class MyMouseProducer(EventProducer):
     def action(self, data: 'MyState') -> Event:
         x, y = pag.position()
-        message = "%d, %d" % (x, y)
+        message: str = "%d, %d" % (x, y)
         return Event("mouse", message)
 
 class MyMouseConsumer(EventConsumer):
-    def action(self, message, data: 'MyState'):
+    def action(self, message: str, data: 'MyState'):
         data.mediator.set_coords(message)
 
 class MyCoordsConsumer(EventConsumer):
-    def action(self, message: MenuMediator, data: 'MyState'):
-        data.mediator.append_text(message.get_coords())
+    def action(self, mediator: MenuMediator, data: 'MyState'):
+        mouse_cmd = xmouse(mediator.get_coords())
+        mediator.append_text(mouse_cmd)
 
 class MySaveConsumer(EventConsumer):
-    def action(self, message: MenuMediator, data: 'MyState'):
-        filename = message.get_url()
-        text = message.get_text()
+    def action(self, mediator: MenuMediator, data: 'MyState'):
+        filename = mediator.get_url()
+        filenamepy = filename + ".py"
+        text = mediator.get_text()
+
+        transformed = xform(text)
+        if transformed is None: return
+
+        try:
+            with open(filenamepy, "w") as fp:
+                fp.write(transformed)
+        except OSError:
+            print("Failed to write %s" % filenamepy)
 
         try:
             with open(filename, "w") as fp:
@@ -34,8 +46,8 @@ class MySaveConsumer(EventConsumer):
             print("Failed to write %s" % filename)
 
 class MyOpenConsumer(EventConsumer):
-    def action(self, message: MenuMediator, data: 'MyState'):
-        filename = message.get_url()
+    def action(self, mediator: MenuMediator, data: 'MyState'):
+        filename = mediator.get_url()
         try:
             with open(filename, "r") as fp:
                 text = fp.read()
@@ -43,8 +55,8 @@ class MyOpenConsumer(EventConsumer):
             print("Failed to open %s" % filename)
             return
 
-        message.delete_text()
-        message.append_text(text)
+        mediator.delete_text()
+        mediator.append_text(text)
 
 
 class MyState:
