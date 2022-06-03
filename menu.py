@@ -17,6 +17,8 @@ class MenuMediator:
         # https://stackoverflow.com/questions/32289175/list-of-all-tkinter-events
         # https://www.tcl.tk/man/tcl/TkCmd/keysyms.html
         self.root.bind_all('<Control-Alt_L>', lambda a: self.do_coord(self))
+        self.root.bind_all('<Control-s>', lambda a: self.do_save(self))
+        self.root.bind_all('<Control-o>', lambda a: self.do_open(self))
 
         # text box for line input
         self.entry_url = Entry(self.root, width=70)
@@ -52,12 +54,21 @@ class MenuMediator:
 
     def set_coords(self, text):
         self.label_coords['text'] = text
+    
+    def get_coords(self):
+        return self.label_coords.cget('text')
 
     def append_text(self, text):
         self.text_box.insert(END, text + "\n")
 
     def get_text(self):
-        self.text_box.get('1.0', 'end')
+        return self.text_box.get('1.0', 'end')
+
+    def delete_text(self):
+        self.text_box.delete('1.0', 'end')
+
+    def get_url(self):
+        return self.entry_url.get()
 
 def _do_save(mediator):
     print('save')

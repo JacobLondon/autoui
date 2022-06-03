@@ -29,25 +29,31 @@ class EventQueue:
         return event
 
 class EventConsumer:
-    def __init__(self, looking_for):
+    def __init__(self, looking_for, data=None):
         self.name = looking_for
+        self.data = data
+
     def consume(self, some_event: Event):
         if some_event.name == self.name:
-            self.action(some_event.message)
+            self.action(some_event.message, self.data)
+
     def action(self, message) -> None:
         raise NotImplementedError('child needs to implement')
 
 class EventProducer:
-    def __init__(self):
+    def __init__(self, data=None):
         self.event = None
+        self.data = data
+
     def produce(self) -> Event:
-        self.event = self.action()
+        self.event = self.action(self.data)
         return self.event
-    def action(self) -> Event:
+
+    def action(self, data) -> Event:
         raise NotImplementedError('child needs to implement')
 
-class Mediator:
-    def __init__(self, producers, consumers, period=0.1):
+class EventMediator:
+    def __init__(self, producers, consumers, period=0.2):
         self.events = EventQueue()
         self.thread: threading.Thread = threading.Thread(target=self.run)
         self._done = False
@@ -64,13 +70,16 @@ class Mediator:
         self.thread.join()
 
     # manually produce instead of using a standalone producer
-    def send(self, event: Event):
+    def send_event(self, event: Event):
         self.events.enqueue(event)
+    def send(self, name: str, message):
+        event = Event(name, message)
+        self.send_event(event)
 
     def execute_event(self, event: Event):
         for consumer in self.consumers:
             if consumer.name == event.name:
-                consumer.action(event.message)
+                consumer.consume(event)
 
     def run(self):
         while not self._done:
@@ -89,23 +98,23 @@ class Mediator:
 # Implementation
 ################################################################################
 
-class MyMouseProducer(EventProducer):
-    def action(self) -> Event:
+class _MyMouseProducer(EventProducer):
+    def action(self, data) -> Event:
         x, y = pag.position()
         message = "%d, %d" % (x, y)
         return Event("mouse", message)
 
-class MyPrintConsumer(EventConsumer):
-    def action(self, message) -> None:
-        print(message)
+class _MyPrintConsumer(EventConsumer):
+    def action(self, data) -> None:
+        print(data)
 
 def _main(argv):
-    m = Mediator(
+    m = EventMediator(
         producers=[
-            MyMouseProducer()
+            _MyMouseProducer()
         ],
         consumers=[
-            MyPrintConsumer("mouse")
+            _MyPrintConsumer("mouse")
         ])
     m.start()
 
