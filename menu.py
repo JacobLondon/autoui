@@ -78,6 +78,10 @@ class MenuMediator:
     def get_url(self):
         return self.entry_url.get()
 
+    def set_url(self, text: str):
+        self.entry_url.delete(0, END)
+        self.entry_url.insert(0, text)
+
 def _do_save(mediator):
     print('save')
     mediator.set_coords("1, 2")

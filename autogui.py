@@ -1,3 +1,5 @@
+import time
+import threading
 import pyautogui as pag
 import os
 
@@ -10,6 +12,7 @@ from events import (
 from menu import MenuMediator
 from transformer import xmouse, xform
 
+CHECKPOINT = 'autogui.checkpoint'
 
 def try_write(filename: str, data: str):
     if not filename:
@@ -20,7 +23,7 @@ def try_write(filename: str, data: str):
         with open(filename, "w") as fp:
             fp.write(data)
     except OSError:
-        print(f"Cannot write: {filename} not allowed")
+        print(f"Cannot write: {filename}")
 
 def try_read(filename: str) -> str:
     if not filename:
@@ -77,6 +80,8 @@ class MySaveConsumer(EventConsumer):
         try_write(filenamepy, transformed)
         try_write(filename, text)
 
+        try_write(CHECKPOINT, filename)
+
 class MyOpenConsumer(EventConsumer):
     def action(self, mediator: MenuMediator, data: 'MyState'):
         filename = mediator.get_url()
@@ -101,6 +106,15 @@ class MyPlayConsumer(EventConsumer):
         print(f"Running {filename}...")
         os.system(command)
 
+class MyStartupConsumer(EventConsumer):
+    def action(self, mediator: MenuMediator, data: 'MyState'):
+        checkpoint = try_read(CHECKPOINT)
+        if checkpoint is None: return
+
+        # fine... we store it here
+        mediator.set_url(checkpoint)
+
+
 class MyState:
     def __init__(self):
         producers = [
@@ -112,6 +126,7 @@ class MyState:
             MySaveConsumer("save", self),
             MyOpenConsumer("open", self),
             MyPlayConsumer("play", self),
+            MyStartupConsumer("startup", self),
         ]
         self.eventer = EventMediator(producers, consumers)
         self.mediator = MenuMediator("AutoGUI",
@@ -120,10 +135,18 @@ class MyState:
             self.coord_save_func,
             self.play_func)
 
+        def startup_thread():
+            time.sleep(0.25)
+            self.eventer.produce("startup", self.mediator)
+            self.eventer.produce("open", self.mediator)
+        self.startup_thread = threading.Thread(target=startup_thread)
+
     def start(self):
         self.eventer.start()
+        self.startup_thread.start()
         self.mediator.start()
         self.eventer.stop()
+        self.startup_thread.join()
 
     # press hotkey to insert coords into textbox
     def coord_save_func(self, mediator):
