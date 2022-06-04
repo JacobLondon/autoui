@@ -42,6 +42,7 @@ Download Python
 Run the installer -- Check ADD TO PATH during install's first window!!!!!!!!
 Once installed, run the following in a cmd window:
     python -m pip install pyautogui
+Download this software: https://github.com/JacobLondon/autoui/archive/refs/heads/master.zip
 
 Running
 -------
