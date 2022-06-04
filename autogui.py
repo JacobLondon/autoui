@@ -12,18 +12,26 @@ from transformer import xmouse, xform
 
 
 def try_write(filename: str, data: str):
+    if not filename:
+        print("Cannot write: no file specified")
+        return
+
     try:
         with open(filename, "w") as fp:
             fp.write(data)
     except OSError:
-        print("Failed to write", filename)
+        print(f"Cannot write: {filename} not allowed")
 
 def try_read(filename: str) -> str:
+    if not filename:
+        print("Cannot open: no file specified")
+        return None
+
     try:
         with open(filename, "r") as fp:
             return fp.read()
     except OSError:
-        print("Failed to open", filename)
+        print(f"Cannot open: {filename} not allowed")
     return None
 
 def command_is_probably_safe(shell_command: str) -> bool:
@@ -37,7 +45,7 @@ def command_is_probably_safe(shell_command: str) -> bool:
 class MyMouseProducer(EventProducer):
     def action(self, data: 'MyState') -> Event:
         x, y = pag.position()
-        message: str = "%d, %d" % (x, y)
+        message: str = f"{x}, {y}"
         return Event("mouse", message)
 
 class MyMouseConsumer(EventConsumer):
@@ -65,7 +73,7 @@ class MySaveConsumer(EventConsumer):
             print("Cannot save: Invalid characters in filename")
             return
 
-        filenamepy = filename + ".py"
+        filenamepy = f"{filename}.py"
         try_write(filenamepy, transformed)
         try_write(filename, text)
 
@@ -82,14 +90,15 @@ class MyPlayConsumer(EventConsumer):
     def action(self, mediator: MenuMediator, data: 'MyState'):
         filename = mediator.get_url()
         if not filename:
-            print("Cannot play: no file specified")
+            print("Cannot play: No file specified")
             return
 
         if not command_is_probably_safe(filename):
-            print("Unsafe text in the URL!")
+            print("Cannot play: Unsafe text in the URL!")
             return
 
         command = f"python {filename}.py"
+        print(f"Running {filename}...")
         os.system(command)
 
 class MyState:

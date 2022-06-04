@@ -26,8 +26,15 @@ ALLOWABLE_HOTKEYS = ['\t', '\n', '\r', ' ', '!', '"', '#', '$', '%', '&', "'", '
 'up', 'volumedown', 'volumemute', 'volumeup', 'win', 'winleft', 'winright', 'yen',
 'command', 'option', 'optionleft', 'optionright']
 
+def escape_string(string: str) -> str:
+    string = string.replace("\\", "\\\\")
+    string = string.replace("'", "\\'")
+    string = string.replace('"', '\\"')
+    return string
+
 def toprint(string: str) -> str:
-    return f"""print('''{string}''')"""
+    string = escape_string(string)
+    return f'print("{string}")'
 
 def type_able(value: str, typecls) -> bool:
     try:
@@ -41,6 +48,10 @@ def intable(value: str) -> bool:
 
 def floatable(value: str) -> bool:
     return type_able(value, float)
+
+def eprint(line_index: int, message: str) -> None:
+    print(f"Line {line_index + 1}: {message}")
+    return None
 
 # turn commands into file text
 def xform(commands: str) -> str:
@@ -60,20 +71,17 @@ pag.FAILSAFE = True
 
         elif words[0] == 'mouse':
             if len(words) < 3:
-                print("Invalid mouse command on line", i+1)
-                return None
+                return eprint(i, "Invalid mouse command")
             if not words[1].endswith(','):
-                print("Invalid mouse command on line", i+1, "Missing ','")
-                return None
+                return eprint(i, "Invalid mouse command on line: Missing ','")
 
             x = words[1].replace(',', '') # contains a trailing comma
             if not intable(x):
-                print("Invalid mouse x position on line", i+1, "Not a number")
-                return None
+                return eprint(i, "Invalid mouse x position: Not a number")
 
             y = words[2]
             if not intable(y):
-                print("Invalid mouse y position on line", i+1, "Not a number")
+                return eprint(i, "Invalid mouse y position: Not a number")
 
             builder.append(toprint(line))
             builder.append(f"pag.moveTo({x}, {y})")
@@ -95,15 +103,14 @@ pag.FAILSAFE = True
             builder.append("pag.rightClick()")
 
         elif words[0] == 'pause':
-            builder.append("input('Press <Enter> to continue...')")
-        
+            builder.append("print('Press <Enter> to continue...')")
+            builder.append("pag.alert(text='Execution paused... Press OK or <Enter> to continue', title='AutoGUI Paused', button='OK')")
+
         elif words[0] == 'hotkey':
             if len(words) < 2:
-                print("Hotkey on line", i+1, "is missing hotkeys")
-                return None
+                return eprint(i, "Hotkey command is missing hotkeys sequence")
             if not all(word in ALLOWABLE_HOTKEYS for word in words[1:]):
-                print("Hotkey on line", i+1, "has an invalid hotkey")
-                return None
+                return eprint(i, "Hotkey sequence has an invalid hotkey")
 
             tmp = "pag.hotkey("
             for j, word in enumerate(words[1:]):
@@ -116,12 +123,13 @@ pag.FAILSAFE = True
         
         elif words[0] == 'type' or words[0] == 'typeln':
             if len(words) < 2:
-                print("Type on line", i+1, "is missing words")
-                return None
+                return eprint(i, "Type command is missing words")
 
             newline = " ".join(words[1:])
             builder.append(toprint(line))
-            builder.append(f'''pag.write("""{newline}""")''')
+
+            newline = escape_string(newline)
+            builder.append(f'pag.write("{newline}")')
             if words[0] == 'typeln':
                 builder.append("pag.hotkey('enter')")
         
@@ -130,17 +138,16 @@ pag.FAILSAFE = True
 
         elif words[0] == 'sleep':
             if len(words) < 2:
-                print("Sleep on line", i+1, "is missing a time")
-                return None
+                return eprint(i, "Sleep command is missing a time")
             if not floatable(words[1]):
-                print("Invalid sleep command on line", i+1, "Not a number")
-                return None
+                return eprint(i, "Sleep command duration is not a number")
 
             builder.append(f"time.sleep({words[1]})")
 
         else:
-            print("Unknown command on line", i+1)
-            return None
+            return eprint(i, "Unknown command")
+    # end line traversal
 
+    builder.append("")
     transformed = "\n".join(builder)
     return transformed
