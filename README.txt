@@ -41,6 +41,24 @@ Visit: https://www.python.org/downloads/
 Download Python
 Run the installer -- Check ADD TO PATH during install's first window!!!!!!!!
 
+Running
+-------
+Run autogui.py
+- Top left is where you are
+- Line under top is a place to say the names of files
+    - scripts/runstuff.txt
+- You can write a file name, then press Save to save changes to that file
+- You can open existing files with Open after typing in a name
+- Play will run the currently opened file.
+    - Play also saves to the text file in the URL bar
+
+Tricks
+------
+1. Position a window so that you can make an alt tab hotkey to do stuff
+2. Once you have clicked on AutoGUI, you can move your mouse without clicking, and press Ctrl+Alt to save the mouse command at that spot
+3. Ensure all your windows are set up before running a macro with the Play button
+4. If you are using the pause command, try doing alt tabbing back to AutoGUI / the command window before pausing so you just have to press Enter to continue
+
 
 Allowable Hotkey Names
 ----------------------
