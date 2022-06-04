@@ -40,6 +40,8 @@ Installing
 Visit: https://www.python.org/downloads/
 Download Python
 Run the installer -- Check ADD TO PATH during install's first window!!!!!!!!
+Once installed, run the following in a cmd window:
+    python -m pip install pyautogui
 
 Running
 -------
