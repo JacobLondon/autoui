@@ -10,14 +10,17 @@ class Event:
 class EventQueue:
     def __init__(self):
         self.events = []
+        self.recorder = {}
         self.lock = threading.Semaphore()
 
     def enqueue(self, event: Event):
         if event is None: return
         self.lock.acquire()
         # unique only
-        if not any(qitem.name == event.name for qitem in self.events):
+        present = self.recorder.get(event.name, False)
+        if not present:
             self.events.append(event)
+            self.recorder[event.name] = True
         self.lock.release()
 
     def dequeue(self) -> Event:
@@ -25,6 +28,7 @@ class EventQueue:
         self.lock.acquire()
         if self.events:
             event = self.events.pop(0)
+            self.recorder[event.name] = False
         self.lock.release()
         return event
 
@@ -70,11 +74,11 @@ class EventMediator:
         self.thread.join()
 
     # manually produce instead of using a standalone producer
-    def send_event(self, event: Event):
+    def produce_event(self, event: Event):
         self.events.enqueue(event)
-    def send(self, name: str, message):
+    def produce(self, name: str, message):
         event = Event(name, message)
-        self.send_event(event)
+        self.produce_event(event)
 
     def execute_event(self, event: Event):
         for consumer in self.consumers:

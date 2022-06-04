@@ -118,17 +118,17 @@ class MyState:
 
     # press hotkey to insert coords into textbox
     def coord_save_func(self, mediator):
-        self.eventer.send("coords", mediator)
+        self.eventer.produce("coords", mediator)
 
     def save_to_file_func(self, mediator):
-        self.eventer.send("save", mediator)
+        self.eventer.produce("save", mediator)
 
     def open_file_func(self, mediator):
-        self.eventer.send("open", mediator)
+        self.eventer.produce("open", mediator)
 
     def play_func(self, mediator):
-        self.eventer.send("save", mediator)
-        self.eventer.send("play", mediator)
+        self.eventer.produce("save", mediator)
+        self.eventer.produce("play", mediator)
 
 def _main(argv):
     m = MyState()
