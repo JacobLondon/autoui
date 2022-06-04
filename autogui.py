@@ -26,6 +26,13 @@ def try_read(filename: str) -> str:
         print("Failed to open", filename)
     return None
 
+def command_is_probably_safe(shell_command: str) -> bool:
+    # not safe if any scary chars are in shell command
+    scary_chars = (';', '&', '|', '&&', '||', '>', '>>', '<', '<<')
+    if any(char in shell_command for char in scary_chars):
+        return False
+    return True
+
 
 class MyMouseProducer(EventProducer):
     def action(self, data: 'MyState') -> Event:
@@ -54,6 +61,10 @@ class MySaveConsumer(EventConsumer):
         if not filename:
             print("Cannot save: no file specified")
             return
+        if not command_is_probably_safe(filename):
+            print("Cannot save: Invalid characters in filename")
+            return
+
         filenamepy = filename + ".py"
         try_write(filenamepy, transformed)
         try_write(filename, text)
@@ -74,10 +85,7 @@ class MyPlayConsumer(EventConsumer):
             print("Cannot play: no file specified")
             return
 
-        if ';' in filename or \
-           '&&' in filename or \
-           '||' in filename or \
-           '&' in filename:
+        if not command_is_probably_safe(filename):
             print("Unsafe text in the URL!")
             return
 
