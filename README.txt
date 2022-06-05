@@ -87,3 +87,9 @@ Allowable Hotkey Names
 'shift', 'shiftleft', 'shiftright', 'sleep', 'space', 'stop', 'subtract', 'tab',
 'up', 'volumedown', 'volumemute', 'volumeup', 'win', 'winleft', 'winright', 'yen',
 'command', 'option', 'optionleft', 'optionright']
+
+Notes
+-----
+- PyAutoGui failsafe is on - if you lose control of your mouse/computer move the cursor to any corner of the screen to stop the program
+- AutoGUI opens the last saved file on load if there was a file previously opened
+- Pressing X in the top corner without saving will result in you losing unsaved data!
