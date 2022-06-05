@@ -103,8 +103,8 @@ pag.FAILSAFE = True
             builder.append("pag.rightClick()")
 
         elif words[0] == 'pause':
-            builder.append("print('Press <Enter> to continue...')")
-            builder.append("pag.alert(text='Execution paused... Press OK or <Enter> to continue', title='AutoGUI Paused', button='OK')")
+            builder.append("input('Press <Enter> to continue...')")
+            #builder.append("pag.alert(text='Execution paused... Press OK or <Enter> to continue', title='AutoGUI Paused', button='OK')")
 
         elif words[0] == 'hotkey':
             if len(words) < 2:
