@@ -1,4 +1,3 @@
-import pyautogui as pag
 
 def xmouse(coordinates: str) -> str:
     return "mouse " + coordinates
@@ -106,6 +105,10 @@ pag.FAILSAFE = True
             builder.append("input('Press <Enter> to continue...')")
             #builder.append("pag.alert(text='Execution paused... Press OK or <Enter> to continue', title='AutoGUI Paused', button='OK')")
 
+        elif words[0] == 'space':
+            builder.append(toprint(line))
+            builder.append("pag.write(\" \")")
+
         elif words[0] == 'hotkey':
             if len(words) < 2:
                 return eprint(i, "Hotkey command is missing hotkeys sequence")
@@ -151,3 +154,25 @@ pag.FAILSAFE = True
     builder.append("")
     transformed = "\n".join(builder)
     return transformed
+
+def _main():
+    import sys
+    if len(sys.argv) < 2:
+        print("No file specified")
+        return 1
+
+    filename = sys.argv[1]
+    try:
+        with open(filename, "r") as fp:
+            text = fp.read()
+    except OSError:
+        print(f"Could not open {filename}")
+        return 1
+
+    xformed = xform(text)
+    print(xformed)
+
+    return 0
+
+if __name__ == '__main__':
+    exit(_main())

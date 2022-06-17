@@ -31,6 +31,7 @@ type WORDS      Type a sequence of words
                     type How's it going?
 typeln WORDS    Type a sequence of words an press <Enter> after
 enter           Press the <Enter> key
+space           Press the <Spacebar> key
 
 # comment       If a line starts with a #, ignore it
 
